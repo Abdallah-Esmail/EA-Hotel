@@ -1,0 +1,42 @@
+{
+  "development": {
+    "username": "sa",
+    "password": "pass12",
+    "database": "Hotel",
+    "host": "127.0.0.1",
+    "dialect": "mssql",
+    "dialectOptions": {
+      "options": {
+        "instanceName": "SQLEXPRESS",
+        "encrypt": false,
+        "trustServerCertificate": true
+      }
+    }
+  },
+  "test": {
+    "username": "sa",
+    "password": "pass12",
+    "database": "Hotel",
+    "host": "127.0.0.1",
+    "dialect": "mssql",
+    "dialectOptions": {
+      "options": {
+        "encrypt": false,
+        "trustServerCertificate": true
+      }
+    }
+  },
+  "production": {
+    "username": "sa",
+    "password": "pass12",
+    "database": "Hotel",
+    "host": "127.0.0.1",
+    "dialect": "mssql",
+    "dialectOptions": {
+      "options": {
+        "encrypt": true,
+        "trustServerCertificate": false
+      }
+    }
+  }
+}
