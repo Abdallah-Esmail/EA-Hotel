@@ -30,7 +30,6 @@ export default {
             16,
             1
           );
-          ROLLBACK TRANSACTION;
           RETURN;
         END
       END;

@@ -1,7 +1,6 @@
 import { check } from "express-validator";
 import validatorMiddleware from "../../middlewares/validationMiddleware.js";
 import userModel from "../../models/user.model.js";
-import slugify from "slugify";
 
 export const signupValidator = [
   check("firstName")
@@ -11,11 +10,7 @@ export const signupValidator = [
     .isString()
     .withMessage("Name must be string")
     .isLength({ min: 3, max: 32 })
-    .withMessage("The name must be between 3 and 32 chars")
-    .custom((firstName, { req }) => {
-      req.body.slug = slugify(firstName);
-      return true;
-    }),
+    .withMessage("The name must be between 3 and 32 chars"),
   check("lastName")
     .notEmpty()
     .withMessage("First name is required")
@@ -46,7 +41,7 @@ export const signupValidator = [
   check("password")
     .notEmpty()
     .withMessage("Password is required")
-    .isLength({ min: 6, max: 32 })
+    .isLength({ min: 8, max: 100 })
     .withMessage("The password must be between 6 and 32 chars")
     .matches(/^\S+$/)
     .withMessage("Password must not contain spaces"),
@@ -103,7 +98,7 @@ export const resetPasswordValidator = [
   check("newPassword")
     .notEmpty()
     .withMessage("New password is required")
-    .isLength({ min: 6, max: 32 })
+    .isLength({ min: 8, max: 100 })
     .withMessage("The password must be between 6 and 32 chars")
     .matches(/^\S+$/)
     .withMessage("Password must not contain spaces"),

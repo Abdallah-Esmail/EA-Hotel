@@ -18,7 +18,6 @@ const signup = asyncWrapper(async (req, res, next) => {
     email: req.body.email,
     password: req.body.password,
     phone: req.body.phone,
-    profileImg: "https://cdn-icons-png.flaticon.com/512/149/149071.png",
   });
 
   const token = createToken(user.id);
@@ -145,10 +144,10 @@ const forgetPassword = asyncWrapper(async (req, res, next) => {
     .update(resetCode)
     .digest("hex");
   user.passwordResetCode = hashedResetCode;
-  user.passwordResetExpires = Date.now() + 10 * 60 * 1000;
+  user.passwordResetExpires = new Date(Date.now() + 10 * 60 * 1000);
   user.passwordResetVerified = false;
   await user.save();
-  const message = `Hi, ${user.name},\nWe received a request to reset the password on your E-shop Account. \n${resetCode}. \n Enter this code to complete the reset.`;
+  const message = `Hi, ${user.name},\nWe received a request to reset the password on your AE-Shop Account. \n${resetCode}. \n Enter this code to complete the reset.`;
 
   try {
     await sendEmail({
@@ -183,7 +182,7 @@ const verifyPasswordResetCode = asyncWrapper(async (req, res, next) => {
   const user = await User.findOne({
     where: {
       passwordResetCode: hashedResetCode,
-      passwordResetExpires: { [Op.gt]: Date.now() },
+      passwordResetExpires: { [Op.gt]: new Date() },
     },
   });
   if (!user) {
@@ -214,7 +213,7 @@ const resetPassword = asyncWrapper(async (req, res, next) => {
     !user ||
     !user.passwordResetVerified ||
     !user.passwordResetExpires ||
-    user.passwordResetExpires < Date.now()
+    user.passwordResetExpires < new Date()
   ) {
     const err = new appError(
       "Invalid request or expired code",
@@ -233,7 +232,7 @@ const resetPassword = asyncWrapper(async (req, res, next) => {
     return next(err);
   }
   user.password = req.body.newPassword;
-  user.passwordChangedAt = Date.now();
+  user.passwordChangedAt = new Date();
   user.passwordResetCode = undefined;
   user.passwordResetExpires = undefined;
   user.passwordResetVerified = undefined;

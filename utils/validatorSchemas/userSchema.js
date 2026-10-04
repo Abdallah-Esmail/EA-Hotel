@@ -1,6 +1,5 @@
 import { check, body } from "express-validator";
 import validatorMiddleware from "../../middlewares/validationMiddleware.js";
-import slugify from "slugify";
 import userModel from "../../models/user.model.js";
 import appError from "../appError.js";
 import httpStatusText from "../httpStatusText.js";
@@ -20,11 +19,7 @@ export const createUserValidator = [
     .isLength({ min: 3 })
     .withMessage("Too short user name")
     .isLength({ max: 32 })
-    .withMessage("Too long user name")
-    .custom((name, { req }) => {
-      req.body.slug = slugify(name);
-      return true;
-    }),
+    .withMessage("Too long user name"),
   check("email")
     .notEmpty()
     .withMessage("Email is required")
@@ -47,7 +42,6 @@ export const createUserValidator = [
     .withMessage("Too long password")
     .matches(/^\S+$/)
     .withMessage("Password must not contain spaces"),
-  check("profileImg").optional(),
   check("phone")
     .notEmpty()
     .withMessage("Phone is required")
@@ -71,15 +65,7 @@ export const createUserValidator = [
 
 export const updateUserValidator = [
   check("id").isMongoId().withMessage("Invalid user id format"),
-  body("name")
-    .optional()
-    .isString()
-    .withMessage("Name must be string")
-    .custom((name, { req }) => {
-      req.body.slug = slugify(name);
-      return true;
-    }),
-  check("profileImg").optional(),
+  body("name").optional().isString().withMessage("Name must be string"),
   check("phone")
     .optional()
     .isMobilePhone(["ar-EG", "ar-SA"])
@@ -95,7 +81,7 @@ export const changeUserPasswordValidator = [
   body("newPassword")
     .notEmpty()
     .withMessage("The new password is required")
-    .isLength({ min: 6, max: 32 })
+    .isLength({ min: 8, max: 100 })
     .withMessage("Password must be between 6 and 32 chars")
     .matches(/^\S+$/)
     .withMessage("Password must not contain spaces")
@@ -148,19 +134,11 @@ export const deactivateUserValidator = [
 ];
 
 export const updateLoggedUserValidator = [
-  body("name")
-    .optional()
-    .isString()
-    .withMessage("Name must be string")
-    .custom((name, { req }) => {
-      req.body.slug = slugify(name);
-      return true;
-    }),
+  body("name").optional().isString().withMessage("Name must be string"),
   check("phone")
     .optional()
     .isMobilePhone(["ar-EG", "ar-SA"])
     .withMessage("Invalid phone number only accepts Egy & SA phone numbers"),
-  check("profileImg").optional(),
   validatorMiddleware,
 ];
 

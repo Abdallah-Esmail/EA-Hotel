@@ -57,6 +57,12 @@ const Booking = sequelize.define(
     paidAt: { type: DataTypes.DATE, field: "paid_at" },
     paymentIntentId: { type: DataTypes.STRING, field: "payment_intent_id" },
     sessionId: { type: DataTypes.STRING, field: "session_id" },
+    isRefunded: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+      field: "is_refunded",
+    },
+    refundedAt: { type: DataTypes.DATE, field: "paid_at" },
   },
   {
     timestamps: true,

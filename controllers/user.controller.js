@@ -1,5 +1,5 @@
 import userModel from "../models/user.model.js";
-import factoryHandler from "./handlersFactory.controller.js";
+import handlersFactory from "./handlersFactory.controller.js";
 import asyncWrapper from "../middlewares/asyncWrapper.js";
 import appError from "../utils/appError.js";
 import httpStatusText from "../utils/httpStatusText.js";
@@ -10,73 +10,11 @@ import createToken from "../utils/createToken.js";
 import cloudinary from "../config/cloudinary.js";
 import { uploadSingleImage } from "../middlewares/uploadImage.js";
 
-const getUsers = factoryHandler.getAll(userModel, "User");
-const getUser = factoryHandler.getOne(userModel);
-
-// Upload single image
-const uploadUserImage = uploadSingleImage("profileImg");
-
-const extractPublicId = (url) => {
-  if (!url) return null;
-  const parts = url.split("/");
-  const fileName = parts[parts.length - 1].split(".")[0];
-  const folder = parts[parts.length - 2];
-  return `${folder}/${fileName}`;
-};
-
-const safeDestroy = async (publicId) => {
-  if (!publicId) return;
-  try {
-    await cloudinary.uploader.destroy(publicId);
-  } catch (err) {
-    console.error(
-      `Failed to delete image ${publicId} from Cloudinary:`,
-      err.message,
-    );
-  }
-};
-
-// Image processing
-const resizeImage = asyncWrapper(async (req, res, next) => {
-  if (req.file) {
-    const filename = `user-${crypto.randomUUID()}-${Date.now()}.jpeg`;
-    const processedBuffer = await sharp(req.file.buffer)
-      .resize(600, 600, {
-        fit: "cover",
-        background: "#ffffff",
-        withoutEnlargement: true,
-      })
-      .flatten({ background: "#ffffff" })
-      .jpeg({ quality: 90 })
-      .toBuffer();
-
-    try {
-      const base64Image = `data:image/jpeg;base64,${processedBuffer.toString("base64")}`;
-
-      const result = await cloudinary.uploader.upload(base64Image, {
-        folder: "users",
-      });
-
-      req.body.profileImg = result.secure_url;
-    } catch (error) {
-      return next(
-        new appError("Image upload failed", 500, httpStatusText.FAIL),
-      );
-    }
-  }
-
-  next();
-});
+const getUsers = handlersFactory.getAll(userModel, "User");
+const getUser = handlersFactory.getOne(userModel);
 
 const createUser = asyncWrapper(async (req, res, next) => {
-  const allowedFields = [
-    "name",
-    "phone",
-    "profileImg",
-    "slug",
-    "email",
-    "password",
-  ];
+  const allowedFields = ["name", "phone", "email", "password"];
   const bodyContent = {};
   allowedFields.forEach((field) => {
     if (req.body[field] !== undefined) {
@@ -89,7 +27,7 @@ const createUser = asyncWrapper(async (req, res, next) => {
 });
 
 const updateUser = asyncWrapper(async (req, res, next) => {
-  const allowedFields = ["name", "phone", "slug", "profileImg", "active"];
+  const allowedFields = ["name", "phone", "active"];
   const updateData = {};
   allowedFields.forEach((field) => {
     if (req.body[field] !== undefined) {
@@ -174,7 +112,7 @@ const updateLoggedUserPassword = asyncWrapper(async (req, res, next) => {
   const user = await userModel
     .findByIdAndUpdate(
       req.user.id,
-      { password: hashedPassword, passwordChangedAt: Date.now() },
+      { password: hashedPassword, passwordChangedAt: new Date(Date.now()) },
       {
         returnDocument: "after",
         runValidators: true,
@@ -196,7 +134,7 @@ const updateLoggedUserPassword = asyncWrapper(async (req, res, next) => {
 });
 
 const updateLoggedUserData = asyncWrapper(async (req, res, next) => {
-  const allowedFields = ["name", "phone", "profileImg", "slug"];
+  const allowedFields = ["name", "phone"];
   const updateData = {};
   allowedFields.forEach((field) => {
     if (req.body[field] !== undefined) {

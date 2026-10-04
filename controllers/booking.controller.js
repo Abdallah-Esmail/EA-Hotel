@@ -45,7 +45,9 @@ const modifyBooking = async (event) => {
     case "charge.refunded": {
       const charge = event.data.object;
       const booking = await Booking.findOne({
-        paymentIntentId: charge.payment_intent,
+        where: {
+          paymentIntentId: charge.payment_intent,
+        },
       });
       if (!booking) {
         console.error("Booking not found for this refund!");
@@ -105,7 +107,7 @@ const getRoomBookings = asyncWrapper(async (req, res, next) => {
 
   const where = {
     roomId: id,
-    status: { [Op.in]: ["pending", "paid"] },
+    status: { [Op.in]: ["pending", "confirmed"] },
   };
 
   if (from && to) {

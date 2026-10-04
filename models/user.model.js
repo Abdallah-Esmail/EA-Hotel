@@ -31,7 +31,7 @@ const User = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
       validate: {
-        len: [8, 100],
+        len: [6, 32],
       },
     },
     role: {
@@ -61,6 +61,12 @@ const User = sequelize.define(
     timestamps: true,
   },
 );
+
+User.prototype.toJSON = function () {
+  const values = { ...this.get() };
+  delete values.password;
+  return values;
+};
 
 User.beforeSave(async (user) => {
   if (!user.changed("password")) return;

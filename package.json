@@ -8,7 +8,7 @@
   "main": "index.js",
   "scripts": {
     "start:dev": "nodemon -r dotenv/config index.js",
-    "start:prod": "set NODE_ENV=development && node -r dotenv/config index.js"
+    "start:prod": "cross-env NODE_ENV=production node index.js"
   },
   "devDependencies": {
     "eslint": "^8.57.1",
@@ -35,7 +35,6 @@
     "qs": "^6.16.0",
     "sequelize": "^6.37.8",
     "sharp": "^0.35.4",
-    "slugify": "^1.6.9",
     "stripe": "^22.6.2",
     "tedious": "^20.0.0"
   }

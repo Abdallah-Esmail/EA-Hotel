@@ -27,7 +27,7 @@ const app = express();
 // Cors
 // app.use(
 // cors({
-// origin: ["https://ae-shop.vercel.app", "http://localhost:5173"],
+// origin: ["https://ae-hotel.vercel.app", "http://localhost:5173"],
 // credentials: true,
 // }),
 // );
