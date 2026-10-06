@@ -48,6 +48,9 @@ const getAllRooms = handlerFactory.getAll(Room, "Room");
 // GET /api/v1/rooms/:id
 const getRoom = handlerFactory.getOne(Room);
 
+// GET /api/v1/rooms/:id/bookings
+const getRoomBookings = handlerFactory.getOne(Room);
+
 // POST /api/v1/rooms
 const createRoom = handlerFactory.createOne(Room);
 

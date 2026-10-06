@@ -62,7 +62,7 @@ const Booking = sequelize.define(
       defaultValue: false,
       field: "is_refunded",
     },
-    refundedAt: { type: DataTypes.DATE, field: "paid_at" },
+    refundedAt: { type: DataTypes.DATE, field: "refunded_at" },
   },
   {
     timestamps: true,

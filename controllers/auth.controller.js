@@ -14,7 +14,6 @@ const signup = asyncWrapper(async (req, res, next) => {
   const user = await User.create({
     firstName: req.body.firstName,
     lastName: req.body.lastName,
-    slug: req.body.slug,
     email: req.body.email,
     password: req.body.password,
     phone: req.body.phone,
@@ -147,7 +146,7 @@ const forgetPassword = asyncWrapper(async (req, res, next) => {
   user.passwordResetExpires = new Date(Date.now() + 10 * 60 * 1000);
   user.passwordResetVerified = false;
   await user.save();
-  const message = `Hi, ${user.name},\nWe received a request to reset the password on your AE-Shop Account. \n${resetCode}. \n Enter this code to complete the reset.`;
+  const message = `Hi, ${user.name},\nWe received a request to reset the password on your AE-Hotel Account. \n${resetCode}. \n Enter this code to complete the reset.`;
 
   try {
     await sendEmail({

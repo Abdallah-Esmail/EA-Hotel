@@ -12,7 +12,6 @@ const getAll = (model, modelName = "") => {
 
     const apiFeatures = new ApiFeatures(req.query)
       .filter()
-      .search(modelName)
       .sort()
       .limitFields()
       .paginate();

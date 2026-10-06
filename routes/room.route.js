@@ -1,11 +1,11 @@
 import express from "express";
 import roomController from "../controllers/room.controller.js";
+import bookingController from "../controllers/booking.controller.js";
 import * as authController from "../controllers/auth.controller.js";
-import bookingRoute from "./booking.route.js";
 
 const router = express.Router();
 
-router.use("/:id/bookings", bookingRoute);
+router.get("/:id/bookings", bookingController.getRoomBookings);
 
 router.get("/:id/check-availability", roomController.checkAvailability);
 

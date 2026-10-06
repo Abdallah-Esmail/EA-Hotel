@@ -66,27 +66,6 @@ class ApiFeatures {
     return this;
   }
 
-  search(modelName) {
-    if (this.queryString.keyword) {
-      const keyword = `%${this.queryString.keyword}%`;
-      let searchCondition;
-
-      if (modelName === "Product" || modelName === "Room") {
-        searchCondition = {
-          [Op.or]: [
-            { title: { [Op.like]: keyword } },
-            { description: { [Op.like]: keyword } },
-          ],
-        };
-      } else {
-        searchCondition = { name: { [Op.like]: keyword } };
-      }
-
-      this.where = { ...this.where, ...searchCondition };
-    }
-    return this;
-  }
-
   paginate() {
     const page = +this.queryString.page || 1;
     const limit = +this.queryString.limit || 50;
