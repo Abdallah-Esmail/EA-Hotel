@@ -2,6 +2,12 @@ import express from "express";
 import roomController from "../controllers/room.controller.js";
 import bookingController from "../controllers/booking.controller.js";
 import * as authController from "../controllers/auth.controller.js";
+import {
+  createRoomValidator,
+  updateRoomValidator,
+  getRoomValidator,
+  deleteRoomValidator,
+} from "../validators/room.validator.js";
 
 const router = express.Router();
 
@@ -17,22 +23,25 @@ router
     authController.allowedTo("admin", "manager"),
     roomController.uploadRoomImage,
     roomController.resizeRoomImage,
+    createRoomValidator,
     roomController.createRoom,
   );
 
 router
   .route("/:id")
-  .get(roomController.getRoom)
+  .get(getRoomValidator, roomController.getRoom)
   .patch(
     authController.protect,
     authController.allowedTo("admin", "manager"),
     roomController.uploadRoomImage,
     roomController.resizeRoomImage,
+    updateRoomValidator,
     roomController.updateRoom,
   )
   .delete(
     authController.protect,
     authController.allowedTo("admin", "manager"),
+    deleteRoomValidator,
     roomController.deleteRoom,
   );
 
