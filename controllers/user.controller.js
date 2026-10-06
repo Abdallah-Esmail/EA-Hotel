@@ -1,17 +1,13 @@
-import userModel from "../models/user.model.js";
+import User from "../models/user.model.js";
 import handlersFactory from "./handlersFactory.controller.js";
 import asyncWrapper from "../middlewares/asyncWrapper.js";
 import appError from "../utils/appError.js";
 import httpStatusText from "../utils/httpStatusText.js";
 import bcrypt from "bcryptjs";
-import crypto from "crypto";
-import sharp from "sharp";
 import createToken from "../utils/createToken.js";
-import cloudinary from "../config/cloudinary.js";
-import { uploadSingleImage } from "../middlewares/uploadImage.js";
 
-const getUsers = handlersFactory.getAll(userModel, "User");
-const getUser = handlersFactory.getOne(userModel);
+const getUsers = handlersFactory.getAll(User, "User");
+const getUser = handlersFactory.getOne(User);
 
 const createUser = asyncWrapper(async (req, res, next) => {
   const allowedFields = ["name", "phone", "email", "password"];
@@ -22,8 +18,8 @@ const createUser = asyncWrapper(async (req, res, next) => {
     }
   });
 
-  const user = await userModel.create(bodyContent);
-  res.status(200).json({ data: user });
+  const user = await User.create(bodyContent);
+  res.status(200).json({ status: httpStatusText.SUCCESS, data: user });
 });
 
 const updateUser = asyncWrapper(async (req, res, next) => {
@@ -35,50 +31,29 @@ const updateUser = asyncWrapper(async (req, res, next) => {
     }
   });
 
-  const oldUser = await userModel.findById(req.params.id);
-  if (!oldUser) {
+  const user = await User.findByPk(req.params.id);
+  if (!user) {
     const error = new appError("Document not found", 404, httpStatusText.FAIL);
     return next(error);
   }
 
-  const document = await userModel.findByIdAndUpdate(
-    req.params.id,
-    updateData,
-    {
-      returnDocument: "after",
-      runValidators: true,
-    },
-  );
-
-  if (!document) {
-    const error = new appError("Document not found", 404, httpStatusText.FAIL);
-    return next(error);
-  }
-
-  if (updateData.profileImg && oldUser.profileImg) {
-    await safeDestroy(extractPublicId(oldUser.profileImg));
-  }
+  await user.update(updateData);
 
   return res.status(200).json({
     status: httpStatusText.SUCCESS,
-    data: { document },
+    data: { document: user },
   });
 });
 
 const updateUserRole = asyncWrapper(async (req, res, next) => {
-  const user = await userModel.findByIdAndUpdate(
-    req.params.id,
-    { role: req.body.role },
-    {
-      returnDocument: "after",
-      runValidators: true,
-    },
-  );
+  const user = await User.findByPk(req.params.id);
 
   if (!user) {
     const error = new appError("User not found", 404, httpStatusText.FAIL);
     return next(error);
   }
+
+  await user.update({ role: req.body.role });
 
   res.status(200).json({
     status: httpStatusText.SUCCESS,
@@ -87,18 +62,15 @@ const updateUserRole = asyncWrapper(async (req, res, next) => {
 });
 
 const deactivateUser = asyncWrapper(async (req, res, next) => {
-  const updatedUser = await userModel.findByIdAndUpdate(
-    req.params.id,
-    { active: false },
-    {
-      returnDocument: "after",
-      runValidators: true,
-    },
-  );
-  if (!updatedUser) {
+  const user = await User.findByPk(req.params.id);
+
+  if (!user) {
     const error = new appError("Document not found", 404, httpStatusText.FAIL);
     return next(error);
   }
+
+  await user.update({ active: false });
+
   res.status(204).send();
 });
 
@@ -109,21 +81,18 @@ const getLoggedUserData = asyncWrapper(async (req, res, next) => {
 
 const updateLoggedUserPassword = asyncWrapper(async (req, res, next) => {
   const hashedPassword = await bcrypt.hash(req.body.newPassword, 12);
-  const user = await userModel
-    .findByIdAndUpdate(
-      req.user.id,
-      { password: hashedPassword, passwordChangedAt: new Date(Date.now()) },
-      {
-        returnDocument: "after",
-        runValidators: true,
-      },
-    )
-    .select("+password");
+
+  const user = await User.findByPk(req.user.id);
 
   if (!user) {
     const error = new appError("User not found", 404, httpStatusText.FAIL);
     return next(error);
   }
+
+  await user.update({
+    password: hashedPassword,
+    passwordChangedAt: new Date(),
+  });
 
   const token = createToken(user.id);
   res.status(200).json({
@@ -141,6 +110,7 @@ const updateLoggedUserData = asyncWrapper(async (req, res, next) => {
       updateData[field] = req.body[field];
     }
   });
+
   if (Object.keys(updateData).length === 0) {
     const err = new appError(
       "Please, enter the data to update",
@@ -150,33 +120,30 @@ const updateLoggedUserData = asyncWrapper(async (req, res, next) => {
     return next(err);
   }
 
-  if (updateData.profileImg && req.user.profileImg) {
-    await safeDestroy(extractPublicId(req.user.profileImg));
+  const user = await User.findByPk(req.user.id);
+
+  if (!user) {
+    const error = new appError("User not found", 404, httpStatusText.FAIL);
+    return next(error);
   }
 
-  const updatedUser = await userModel.findByIdAndUpdate(
-    req.user.id,
-    updateData,
-    {
-      returnDocument: "after",
-      runValidators: true,
-    },
-  );
+  await user.update(updateData);
 
   res.status(200).json({
     status: httpStatusText.SUCCESS,
-    data: { document: updatedUser },
+    data: { document: user },
   });
 });
 
 const deleteLoggedUser = asyncWrapper(async (req, res, next) => {
-  await userModel.findByIdAndUpdate(req.user.id, { active: false });
+  const user = await User.findByPk(req.user.id);
+  if (user) {
+    await user.update({ active: false });
+  }
   res.status(204).send();
 });
 
 export {
-  uploadUserImage,
-  resizeImage,
   getUsers,
   getUser,
   updateUser,
