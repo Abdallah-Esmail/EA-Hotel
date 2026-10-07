@@ -4,22 +4,19 @@ import { protect, allowedTo } from "../controllers/auth.controller.js";
 import {
   createBookingValidator,
   getBookingValidator,
-} from "../utils/validators/bookingValidator.js";
-import {
   cancelValidator,
   checkoutValidator,
 } from "../utils/validatorSchemas/bookingSchema.js";
 
-const router = express.Router();
+const router = express.Router({ mergeParams: true });
 
 router.use(protect);
 
-router.get("/", allowedTo("admin", "manager"), (req, res, next) => {
-  if (req.params.id) {
-    return bookingController.getRoomBookings(req, res, next);
-  }
-  return bookingController.getAllBookings(req, res, next);
-});
+router.get(
+  "/",
+  allowedTo("admin", "manager"),
+  bookingController.getAllBookings,
+);
 
 router.post("/", createBookingValidator, bookingController.createBooking);
 

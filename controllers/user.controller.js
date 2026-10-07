@@ -10,7 +10,7 @@ const getUsers = handlersFactory.getAll(User, "User");
 const getUser = handlersFactory.getOne(User);
 
 const createUser = asyncWrapper(async (req, res, next) => {
-  const allowedFields = ["name", "phone", "email", "password"];
+  const allowedFields = ["firstName", "lastName", "phone", "email", "password"];
   const bodyContent = {};
   allowedFields.forEach((field) => {
     if (req.body[field] !== undefined) {
@@ -23,7 +23,7 @@ const createUser = asyncWrapper(async (req, res, next) => {
 });
 
 const updateUser = asyncWrapper(async (req, res, next) => {
-  const allowedFields = ["name", "phone", "active"];
+  const allowedFields = ["firstName", "lastName", "phone", "active"];
   const updateData = {};
   allowedFields.forEach((field) => {
     if (req.body[field] !== undefined) {
@@ -80,8 +80,6 @@ const getLoggedUserData = asyncWrapper(async (req, res, next) => {
 });
 
 const updateLoggedUserPassword = asyncWrapper(async (req, res, next) => {
-  const hashedPassword = await bcrypt.hash(req.body.newPassword, 12);
-
   const user = await User.findByPk(req.user.id);
 
   if (!user) {
@@ -90,7 +88,7 @@ const updateLoggedUserPassword = asyncWrapper(async (req, res, next) => {
   }
 
   await user.update({
-    password: hashedPassword,
+    password: req.body.newPassword,
     passwordChangedAt: new Date(),
   });
 
@@ -103,7 +101,7 @@ const updateLoggedUserPassword = asyncWrapper(async (req, res, next) => {
 });
 
 const updateLoggedUserData = asyncWrapper(async (req, res, next) => {
-  const allowedFields = ["name", "phone"];
+  const allowedFields = ["firstName", "lastName", "phone"];
   const updateData = {};
   allowedFields.forEach((field) => {
     if (req.body[field] !== undefined) {

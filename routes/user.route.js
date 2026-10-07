@@ -26,8 +26,6 @@ router.put(
 
 router.put(
   "/updateMe",
-  userController.uploadUserImage,
-  userController.resizeImage,
   updateLoggedUserValidator,
   userController.updateLoggedUserData,
 );
@@ -51,12 +49,7 @@ router
 router
   .route("/:id")
   .get(getUserValidator, userController.getUser)
-  .put(
-    userController.uploadUserImage,
-    userController.resizeImage,
-    updateUserValidator,
-    userController.updateUser,
-  )
+  .put(updateUserValidator, userController.updateUser)
   .patch(deactivateUserValidator, userController.deactivateUser);
 
 export default router;

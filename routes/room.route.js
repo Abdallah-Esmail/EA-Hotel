@@ -7,7 +7,7 @@ import {
   updateRoomValidator,
   getRoomValidator,
   deleteRoomValidator,
-} from "../validators/room.validator.js";
+} from "../utils/validatorSchemas/roomSchema.js";
 
 const router = express.Router();
 
