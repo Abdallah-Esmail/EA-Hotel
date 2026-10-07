@@ -1,5 +1,5 @@
 import { body, param } from "express-validator";
-import validatorMiddleware from "../../middlewares/validationMiddleware";
+import validatorMiddleware from "../../middlewares/validationMiddleware.js";
 
 const roomTypes = ["single", "double", "suite", "deluxe"];
 const roomStatuses = ["available", "maintenance"];
