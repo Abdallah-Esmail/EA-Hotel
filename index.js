@@ -25,12 +25,12 @@ import bookingController from "./controllers/booking.controller.js";
 const app = express();
 
 // Cors
-// app.use(
-// cors({
-// origin: ["https://ae-hotel.vercel.app", "http://localhost:5173"],
-// credentials: true,
-// }),
-// );
+app.use(
+  cors({
+    origin: ["https://ae-hotel.vercel.app", "http://localhost:5173"],
+    credentials: true,
+  }),
+);
 
 // Webhook
 app.post(

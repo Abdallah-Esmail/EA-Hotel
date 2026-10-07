@@ -1,5 +1,5 @@
 import { body, param } from "express-validator";
-import validatorMiddleware from "../../middlewares/validationMiddleware";
+import validatorMiddleware from "../../middlewares/validationMiddleware.js";
 
 const bookingStatuses = ["pending", "confirmed", "cancelled"];
 

@@ -59,6 +59,7 @@ const modifyBooking = async (event) => {
       // Modify booking
       booking.isRefunded = true;
       booking.refundedAt = new Date();
+      booking.status = "cancelled";
       booking.paymentIntentId = charge.payment_intent;
       await booking.save();
 
@@ -108,6 +109,7 @@ const getRoomBookings = asyncWrapper(async (req, res, next) => {
   const where = {
     roomId: id,
     status: { [Op.in]: ["pending", "confirmed"] },
+    isPaid: true,
   };
 
   if (from && to) {
@@ -343,7 +345,7 @@ const checkoutSession = asyncWrapper(async (req, res, next) => {
           },
           unit_amount: Math.round(
             (booking.totalPrice +
-              booking.totalPrice * process.env.TAX_PERCENT) *
+              booking.totalPrice * +process.env.TAX_PERCENT) *
               100,
           ),
         },

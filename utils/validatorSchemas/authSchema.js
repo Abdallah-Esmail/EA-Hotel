@@ -1,6 +1,6 @@
 import { check } from "express-validator";
 import validatorMiddleware from "../../middlewares/validationMiddleware.js";
-import userModel from "../../models/user.model.js";
+import User from "../../models/user.model.js";
 
 export const signupValidator = [
   check("firstName")
@@ -26,7 +26,7 @@ export const signupValidator = [
     .withMessage("Invalid email address")
     .normalizeEmail()
     .custom(async (val) => {
-      const user = await userModel.findOne({ where: { email: val } });
+      const user = await User.findOne({ where: { email: val } });
       if (user) {
         throw new Error("The email already exists");
       }
