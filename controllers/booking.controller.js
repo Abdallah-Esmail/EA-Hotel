@@ -106,10 +106,14 @@ const getRoomBookings = asyncWrapper(async (req, res, next) => {
     return next(new appError("Room not found", 404, httpStatusText.FAIL));
   }
 
+  const holdCutoff = new Date(Date.now() - 15 * 60 * 1000);
+
   const where = {
     roomId: id,
-    status: { [Op.in]: ["pending", "confirmed"] },
-    isPaid: true,
+    [Op.or]: [
+      { status: "confirmed" },
+      { status: "pending", createdAt: { [Op.gt]: holdCutoff } },
+    ],
   };
 
   if (from && to) {
@@ -136,6 +140,7 @@ const getRoomBookings = asyncWrapper(async (req, res, next) => {
 const createBooking = asyncWrapper(async (req, res, next) => {
   const { roomId, checkIn, checkOut, guestsCount } = req.body;
   const userId = req.user.id;
+
   if (!roomId || !checkIn || !checkOut || !guestsCount) {
     return next(
       new appError(
@@ -161,21 +166,19 @@ const createBooking = asyncWrapper(async (req, res, next) => {
   const room = await Room.findByPk(roomId);
 
   if (!room) {
-    const error = new appError(
-      "There is no room with this ID",
-      404,
-      httpStatusText.FAIL,
+    return next(
+      new appError("There is no room with this ID", 404, httpStatusText.FAIL),
     );
-    return next(error);
   }
 
   if (guestsCount > room.capacity) {
-    const error = new appError(
-      `The maximum number of guests in this room is ${room.capacity}`,
-      400,
-      httpStatusText.FAIL,
+    return next(
+      new appError(
+        `The maximum number of guests in this room is ${room.capacity}`,
+        400,
+        httpStatusText.FAIL,
+      ),
     );
-    return next(error);
   }
 
   const nights =
@@ -183,7 +186,6 @@ const createBooking = asyncWrapper(async (req, res, next) => {
   const totalPrice = nights * room.pricePerNight;
 
   const t = await sequelize.transaction();
-
   const bookingId = uuidv4();
 
   try {
@@ -200,24 +202,26 @@ const createBooking = asyncWrapper(async (req, res, next) => {
         transaction: t,
       },
     );
+
     const createdAt = new Date();
+
     // Booking creation
     await sequelize.query(
       `
-    INSERT INTO Bookings (
-      id,
-      user_id,
-      room_id,
-      check_in,
-      check_out,
-      guests_count,
-      total_price,
-      status,
-      is_paid,
-      createdAt
-    )
-    VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', 0, ?)
-  `,
+      INSERT INTO Bookings (
+        id,
+        user_id,
+        room_id,
+        check_in,
+        check_out,
+        guests_count,
+        total_price,
+        status,
+        is_paid,
+        createdAt
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', 0, ?)
+    `,
       {
         replacements: [
           bookingId,
@@ -236,6 +240,7 @@ const createBooking = asyncWrapper(async (req, res, next) => {
     const booking = await Booking.findByPk(bookingId, {
       transaction: t,
     });
+
     await t.commit();
 
     return res.status(201).json({
@@ -243,6 +248,8 @@ const createBooking = asyncWrapper(async (req, res, next) => {
       data: booking,
     });
   } catch (error) {
+    console.error("DATABASE CATCH ERROR:", error);
+
     if (t && !t.finished) {
       try {
         await t.rollback();
@@ -254,7 +261,26 @@ const createBooking = asyncWrapper(async (req, res, next) => {
       }
     }
 
-    if (error.message?.includes("overlap with an existing active booking")) {
+    let aggregateMessages = [];
+    if (Array.isArray(error.original?.errors)) {
+      aggregateMessages = error.original.errors.map((err) => err.message || "");
+    } else if (Array.isArray(error.parent?.errors)) {
+      aggregateMessages = error.parent.errors.map((err) => err.message || "");
+    }
+
+    const aggregatedText = aggregateMessages.join(" ");
+
+    const errorMessage =
+      aggregateMessages[0] ||
+      error.original?.message ||
+      error.parent?.sqlMessage ||
+      error.message ||
+      "Internal server error";
+
+    if (
+      errorMessage.includes("overlap with an existing active booking") ||
+      aggregatedText.includes("overlap with an existing active booking")
+    ) {
       return next(
         new appError(
           "This room is already booked for these dates",
@@ -263,6 +289,7 @@ const createBooking = asyncWrapper(async (req, res, next) => {
         ),
       );
     }
+
     if (
       error.name === "SequelizeExclusionConstraintError" ||
       error.name === "SequelizeUniqueConstraintError"
@@ -276,7 +303,7 @@ const createBooking = asyncWrapper(async (req, res, next) => {
       );
     }
 
-    return next(new appError(error.message, 500, httpStatusText.FAIL));
+    return next(new appError(errorMessage, 500, httpStatusText.FAIL));
   }
 });
 
@@ -334,12 +361,21 @@ const checkoutSession = asyncWrapper(async (req, res, next) => {
       new appError("Booking is not pending payment", 400, httpStatusText.FAIL),
     );
   }
+  if (Date.now() - new Date(booking.createdAt).getTime() > 15 * 60 * 1000) {
+    return next(
+      new appError(
+        "Booking hold expired, please create a new booking",
+        400,
+        httpStatusText.FAIL,
+      ),
+    );
+  }
 
   const session = await stripe.checkout.sessions.create({
     line_items: [
       {
         price_data: {
-          currency: "egp",
+          currency: "usd",
           product_data: {
             name: "Card Checkout",
           },

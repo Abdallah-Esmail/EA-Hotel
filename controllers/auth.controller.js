@@ -155,9 +155,9 @@ const forgetPassword = asyncWrapper(async (req, res, next) => {
       message,
     });
   } catch (err) {
-    user.passwordResetCode = undefined;
-    user.passwordResetExpires = undefined;
-    user.passwordResetVerified = undefined;
+    user.passwordResetCode = null;
+    user.passwordResetExpires = null;
+    user.passwordResetVerified = false;
     await user.save();
     return next(
       new appError(
@@ -232,9 +232,9 @@ const resetPassword = asyncWrapper(async (req, res, next) => {
   }
   user.password = req.body.newPassword;
   user.passwordChangedAt = new Date();
-  user.passwordResetCode = undefined;
-  user.passwordResetExpires = undefined;
-  user.passwordResetVerified = undefined;
+  user.passwordResetCode = null;
+  user.passwordResetExpires = null;
+  user.passwordResetVerified = false;
   await user.save();
 
   const token = createToken(user.id);
